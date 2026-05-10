@@ -57,7 +57,8 @@
         }
         .lbl-en {
             color: #666;
-            font-size: 11px;
+            font-size: 14px;
+            font-weight: 700;
             display: block;
         }
 
@@ -375,7 +376,7 @@ const CityLabelLayer = L.Layer.extend({
             // Font scaling
             el.querySelector('.lbl-day').style.fontSize  = (12 * scale) + 'px';
             el.querySelector('.lbl-name').style.fontSize = (14 * scale) + 'px';
-            el.querySelector('.lbl-en').style.fontSize   = (11 * scale) + 'px';
+            el.querySelector('.lbl-en').style.fontSize   = (14 * scale) + 'px';
         });
     }
 });
