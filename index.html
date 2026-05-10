@@ -61,6 +61,12 @@
             font-weight: 700;
             display: block;
         }
+        .lbl-sub {
+            color: #999;
+            font-size: 11px;
+            font-weight: 500;
+            display: block;
+        }
 
         /* Sea label */
         .sea-label {
@@ -297,7 +303,7 @@ const locations = [
     { name:'特洛伊',     en:'Troy',      lat:39.9576, lng:26.2397, day:'第3天',   labelOffset:[22, 45]   },
     { name:'以弗所',     en:'Ephesus',   lat:37.9409, lng:27.3415, day:'第4天',   labelOffset:[72,-22]  },
     { name:'罗德岛',     en:'Rhodes',    lat:36.4341, lng:28.2176, day:'第5天',   labelOffset:[72,-22]  },
-    { name:'伊拉克利翁', en:'Heraklion', lat:35.3387, lng:25.1421, day:'第6天',   labelOffset:[-88,-22] },
+    { name:'伊拉克利翁', en:'Heraklion', sub:'克里特岛', lat:35.3387, lng:25.1421, day:'第6天',   labelOffset:[-85,-19] },
     { name:'雅典',       en:'Athens',    lat:37.9430, lng:23.6470, day:'第7-8天', labelOffset:[-80,-22] },
 ];
 
@@ -353,6 +359,7 @@ const CityLabelLayer = L.Layer.extend({
                 <span class="lbl-day">${loc.day}</span>
                 <span class="lbl-name">${loc.name}</span>
                 <span class="lbl-en">${loc.en}</span>
+                ${loc.sub ? `<span class="lbl-sub">${loc.sub}</span>` : ''}
             `;
             this._pane.appendChild(el);
             this._els.push({ el, loc });
@@ -377,6 +384,8 @@ const CityLabelLayer = L.Layer.extend({
             el.querySelector('.lbl-day').style.fontSize  = (12 * scale) + 'px';
             el.querySelector('.lbl-name').style.fontSize = (14 * scale) + 'px';
             el.querySelector('.lbl-en').style.fontSize   = (14 * scale) + 'px';
+            const sub = el.querySelector('.lbl-sub');
+            if (sub) sub.style.fontSize = (11 * scale) + 'px';
         });
     }
 });
