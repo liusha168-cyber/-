@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>土耳其-希腊游船之旅 | 2026年11月</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+            color: white;
+            padding: 18px 20px 14px;
+            text-align: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .header h1 {
+            font-size: clamp(1.2em, 4vw, 2em);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            letter-spacing: 0.02em;
+        }
+        .header p {
+            font-size: clamp(0.75em, 2.5vw, 1em);
+            opacity: 0.92;
+            margin-top: 4px;
+        }
+
+        /* ── MAP ── */
+        #map {
+            flex: 1;
+            min-height: 280px;
+            position: relative;
+        }
+
+        /* Map overlay buttons */
+        .map-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .map-btn {
+            background: rgba(255,255,255,0.95);
+            border: 1.5px solid #2193b0;
+            color: #2193b0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: clamp(11px, 2.5vw, 13px);
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            white-space: nowrap;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .map-btn:active { background: #e8f6fb; transform: scale(0.97); }
+
+        /* City label */
+        .city-label {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(255,255,255,0.95);
+            border: 1.5px solid #2193b0;
+            border-radius: 8px;
+            padding: 4px 7px 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            line-height: 1.35;
+            text-align: center;
+        }
+        .lbl-day {
+            background: #2193b0;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 4px;
+            padding: 1px 5px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .lbl-name {
+            color: #cc2200;
+            font-size: 14px;
+            font-weight: 700;
+            display: block;
+        }
+        .lbl-en {
+            color: #666;
+            font-size: 11px;
+            display: block;
+        }
+
+        /* Sea label */
+        .sea-label {
+            position: absolute;
+            pointer-events: none;
+            text-align: center;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+        }
+        .sea-name {
+            color: #1e7ba6;
+            font-weight: 700;
+            font-size: 15px;
+            display: block;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.8), 0 -1px 3px rgba(255,255,255,0.8);
+        }
+        .sea-en {
+            color: #5a9ab8;
+            font-size: 12px;
+            display: block;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+        }
+
+        /* ── ITINERARY ── */
+        #itinerary-section {
+            background: white;
+            padding: clamp(16px, 4vw, 40px);
+            flex-shrink: 0;
+        }
+        #itinerary-section h2 {
+            color: #2193b0;
+            margin-bottom: 20px;
+            font-size: clamp(1.2em, 4vw, 1.8em);
+            border-bottom: 3px solid #6dd5ed;
+            padding-bottom: 8px;
+        }
+        .day {
+            background: #f8f9fa;
+            border-left: 5px solid #2193b0;
+            padding: clamp(14px, 3vw, 25px);
+            margin-bottom: 16px;
+            border-radius: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .day:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.09);
+        }
+        .day-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .day-number {
+            background: #2193b0;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: clamp(0.8em, 2.5vw, 0.9em);
+        }
+        .day-date {
+            color: #666;
+            font-size: clamp(0.78em, 2.2vw, 0.92em);
+        }
+        .location {
+            font-size: clamp(1.1em, 3.5vw, 1.4em);
+            font-weight: bold;
+            color: #333;
+            margin: 6px 0 2px;
+        }
+        .location-en {
+            color: #666;
+            font-size: clamp(0.75em, 2vw, 0.88em);
+            font-style: italic;
+        }
+        .description {
+            color: #555;
+            line-height: 1.65;
+            margin-top: 8px;
+            font-size: clamp(0.85em, 2.2vw, 0.97em);
+        }
+        .links {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .links a {
+            display: inline-block;
+            background: #6dd5ed;
+            color: white;
+            padding: 9px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: clamp(0.78em, 2.2vw, 0.88em);
+            font-weight: 600;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s, transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .links a:hover { background: #2193b0; }
+        .links a:active { transform: scale(0.97); }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: #f0f4f7;
+            padding: clamp(16px, 4vw, 28px);
+            text-align: center;
+            color: #666;
+            border-top: 3px solid #6dd5ed;
+            font-size: clamp(0.82em, 2.2vw, 0.95em);
+            flex-shrink: 0;
+        }
+        .footer p + p { margin-top: 6px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🚢 土耳其-希腊游船之旅</h1>
+    <p>2026年11月21日 — 11月28日 &nbsp;|&nbsp; 8天7晚东地中海之旅</p>
+</div>
+
+<div id="map">
+    <div class="map-buttons">
+        <a class="map-btn"
+           href="https://www.google.com/maps/dir/Istanbul,Turkey/Canakkale,Turkey/Kusadasi,Turkey/Rhodes,Greece/Heraklion,Greece/Piraeus,Greece"
+           target="_blank">🧭 导航路线</a>
+        <button class="map-btn" onclick="document.getElementById('itinerary-section').scrollIntoView({behavior:'smooth'})">
+            📅 查看行程 ↓
+        </button>
+    </div>
+</div>
+
+<div id="itinerary-section">
+    <h2>📅 详细行程</h2>
+
+    <div class="day">
+        <div class="day-header">
+            <span class="day-number">第1-2天</span>
+            <span class="day-date">2026年11月21-22日（星期六-日）</span>
+        </div>
+        <div class="location">🕌 伊斯坦布尔 <span class="location-en">Istanbul, Turkey</span></div>
+        <div class="description">
+            探索这座横跨欧亚大陆的神奇城市。参观世界著名的蓝色清真寺（苏丹艾哈迈德清真寺）、圣索菲亚大教堂（现为清真寺）和托普卡帕宫。漫步在大巴扎市集，感受东西方文化的交融。
+        </div>
+        <div class="links">
+            <a href="https://maps.google.com/?q=Istanbul,Turkey" target="_blank">📍 查看位置</a>
+            <a href="https://www.google.com/search?q=伊斯坦布尔旅游景点攻略" target="_blank">🔍 景点攻略</a>
+        </div>
+    </div>
+
+    <div class="day">
+        <div class="day-header">
+            <span class="day-number">第3天</span>
+            <span class="day-date">2026年11月23日（星期一）</span>
+        </div>
+        <div class="location">🏛️ 特洛伊古城 <span class="location-en">Troy (Çanakkale), Turkey</span></div>
+        <div class="description">
+            参观荷马史诗《伊利亚特》中描述的传奇古城特洛伊遗址。这座联合国教科文组织世界遗产地见证了3000多年的历史。不要错过著名的特洛伊木马复制品！
+        </div>
+        <div class="links">
+            <a href="https://maps.google.com/?q=Ancient+City+of+Troy,Canakkale,Turkey" target="_blank">📍 查看位置</a>
+            <a href="https://www.google.com/search?q=特洛伊古城攻略" target="_blank">🔍 景点攻略</a>
+        </div>
+    </div>
+
+    <div class="day">
+        <div class="day-header">
+            <span class="day-number">第4天</span>
+            <span class="day-date">2026年11月24日（星期二）</span>
+        </div>
+        <div class="location">🏛️ 以弗所古城 <span class="location-en">Ephesus (Kuşadası), Turkey</span></div>
+        <div class="description">
+            游览世界上保存最完好的古罗马城市之一。欣赏宏伟的塞尔苏斯图书馆、可容纳25,000人的大剧场，以及精美的马赛克和大理石街道。这里曾是古代世界最重要的港口城市之一。
+        </div>
+        <div class="links">
+            <a href="https://maps.google.com/?q=Ephesus+Ancient+City,Turkey" target="_blank">📍 查看位置</a>
+            <a href="https://www.google.com/search?q=以弗所古城旅游攻略" target="_blank">🔍 景点攻略</a>
+        </div>
+    </div>
+
+    <div class="day">
+        <div class="day-header">
+            <span class="day-number">第5天</span>
+            <span class="day-date">2026年11月25日（星期三）</span>
+        </div>
+        <div class="location">⚔️ 罗德岛 <span class="location-en">Rhodes, Greece</span></div>
+        <div class="description">
+            探索这座"骑士之岛"。参观保存完好的中世纪老城，这是欧洲最大的中世纪城镇之一。游览骑士团大宫殿，漫步在古老的城墙上，享受爱琴海的阳光和美丽的海滩。
+        </div>
+        <div class="links">
+            <a href="https://maps.google.com/?q=Rhodes,Greece" target="_blank">📍 查看位置</a>
+            <a href="https://www.google.com/search?q=罗德岛旅游攻略" target="_blank">🔍 景点攻略</a>
+        </div>
+    </div>
+
+    <div class="day">
+        <div class="day-header">
+            <span class="day-number">第6天</span>
+            <span class="day-date">2026年11月26日（星期四）</span>
+        </div>
+        <div class="location">🏺 克里特岛·伊拉克利翁 <span class="location-en">Crete (Heraklion), Greece</span></div>
+        <div class="description">
+            访问希腊最大的岛屿，西方文明的摇篮之一。参观克诺索斯宫殿遗址，这是欧洲最古老的城市之一，也是米诺斯文明的中心。在伊拉克利翁考古博物馆欣赏精美的米诺斯文物。
+        </div>
+        <div class="links">
+            <a href="https://maps.google.com/?q=Heraklion,Crete,Greece" target="_blank">📍 查看位置</a>
+            <a href="https://www.google.com/search?q=克里特岛伊拉克利翁旅游攻略" target="_blank">🔍 景点攻略</a>
+        </div>
+    </div>
+
+    <div class="day">
+        <div class="day-header">
+            <span class="day-number">第7-8天</span>
+            <span class="day-date">2026年11月27-28日（星期五-六）</span>
+        </div>
+        <div class="location">🏛️ 雅典·比雷埃夫斯 <span class="location-en">Athens (Piraeus), Greece</span></div>
+        <div class="description">
+            在西方文明的发源地结束这次美妙的旅程。登上卫城，参观帕特农神庙、雅典娜神庙和古代剧场。漫步在普拉卡老城区，品尝地道的希腊美食。参观雅典国家考古博物馆，了解古希腊的辉煌历史。
+        </div>
+        <div class="links">
+            <a href="https://maps.google.com/?q=Piraeus,Athens,Greece" target="_blank">📍 查看位置</a>
+            <a href="https://www.google.com/search?q=雅典旅游景点攻略" target="_blank">🔍 景点攻略</a>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p><strong>🌊 东地中海游船之旅</strong></p>
+    <p>从土耳其到希腊，探索古代文明的足迹</p>
+    <p style="font-size:0.88em; margin-top:4px;">总航程：约 1,200 海里 &nbsp;|&nbsp; 6个停靠港 &nbsp;|&nbsp; 8天7晚</p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── 数据 ──────────────────────────────────────────────
+const locations = [
+    { name:'伊斯坦布尔', en:'Istanbul',  lat:41.0082, lng:28.9784, day:'第1-2天', labelOffset:[110,-22] },
+    { name:'特洛伊',     en:'Troy',      lat:39.9576, lng:26.2397, day:'第3天',   labelOffset:[0, 55]   },
+    { name:'以弗所',     en:'Ephesus',   lat:37.9409, lng:27.3415, day:'第4天',   labelOffset:[72,-22]  },
+    { name:'罗德岛',     en:'Rhodes',    lat:36.4341, lng:28.2176, day:'第5天',   labelOffset:[72,-22]  },
+    { name:'伊拉克利翁', en:'Heraklion', lat:35.3387, lng:25.1421, day:'第6天',   labelOffset:[-88,-22] },
+    { name:'雅典',       en:'Athens',    lat:37.9430, lng:23.6470, day:'第7-8天', labelOffset:[-80,-22] },
+];
+
+const seaLabels = [
+    { name:'黑海',           en:'Black Sea',         lat:42.30, lng:29.05, minZoom:0 },
+    { name:'博斯普鲁斯海峡', en:'Bosphorus',         lat:41.12, lng:29.05, minZoom:6 },
+    { name:'马尔马拉海',     en:'Sea of Marmara',    lat:40.55, lng:28.60, minZoom:6 },
+    { name:'达达尼尔海峡',   en:'Dardanelles',       lat:40.38, lng:26.75, minZoom:6 },
+    { name:'爱琴海',         en:'Aegean Sea',        lat:38.50, lng:25.20, minZoom:0 },
+    { name:'地中海',         en:'Mediterranean Sea', lat:34.50, lng:21.50, minZoom:0 },
+];
+
+// ── 地图初始化 ─────────────────────────────────────────
+const BASE_ZOOM = 7;
+
+const map = L.map('map', {
+    center: [38.8, 26.5],
+    zoom: BASE_ZOOM,
+    zoomControl: true,
+    attributionControl: true
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+}).addTo(map);
+
+// ── 缩放比例计算 ───────────────────────────────────────
+function getScale() {
+    const z = map.getZoom();
+    return Math.max(0.45, Math.min(1.0, 1.0 + (z - 7) * 0.30));
+}
+function getSeaScale() {
+    const z = map.getZoom();
+    return Math.max(0.30, Math.min(1.0, 1.0 + (z - 7) * 0.40));
+}
+function getPinSize() {
+    const z = map.getZoom();
+    return Math.max(12, Math.min(34, 22 + (z - 7) * 5));
+}
+
+// ── 自定义层：CityLabel ────────────────────────────────
+const CityLabelLayer = L.Layer.extend({
+    onAdd(map) {
+        this._map = map;
+        this._pane = map.getPanes().overlayPane;
+        this._els = [];
+
+        locations.forEach(loc => {
+            const el = document.createElement('div');
+            el.className = 'city-label';
+            el.innerHTML = `
+                <span class="lbl-day">${loc.day}</span>
+                <span class="lbl-name">${loc.name}</span>
+                <span class="lbl-en">${loc.en}</span>
+            `;
+            this._pane.appendChild(el);
+            this._els.push({ el, loc });
+        });
+
+        map.on('zoom move zoomend moveend', this._update, this);
+        this._update();
+    },
+    onRemove(map) {
+        this._els.forEach(({ el }) => el.remove());
+        map.off('zoom move zoomend moveend', this._update, this);
+    },
+    _update() {
+        const scale = getScale();
+        this._els.forEach(({ el, loc }) => {
+            const pt = this._map.latLngToLayerPoint([loc.lat, loc.lng]);
+            const dx = loc.labelOffset[0] * scale;
+            const dy = loc.labelOffset[1] * scale;
+            el.style.left = (pt.x + dx) + 'px';
+            el.style.top  = (pt.y + dy) + 'px';
+            // Font scaling
+            el.querySelector('.lbl-day').style.fontSize  = (12 * scale) + 'px';
+            el.querySelector('.lbl-name').style.fontSize = (14 * scale) + 'px';
+            el.querySelector('.lbl-en').style.fontSize   = (11 * scale) + 'px';
+        });
+    }
+});
+
+// ── 自定义层：SeaLabel ────────────────────────────────
+const SeaLabelLayer = L.Layer.extend({
+    onAdd(map) {
+        this._map = map;
+        this._pane = map.getPanes().overlayPane;
+        this._els = [];
+
+        seaLabels.forEach(sea => {
+            const el = document.createElement('div');
+            el.className = 'sea-label';
+            el.innerHTML = `<span class="sea-name">${sea.name}</span><span class="sea-en">${sea.en}</span>`;
+            this._pane.appendChild(el);
+            this._els.push({ el, sea });
+        });
+
+        map.on('zoom move zoomend moveend', this._update, this);
+        this._update();
+    },
+    onRemove(map) {
+        this._els.forEach(({ el }) => el.remove());
+        map.off('zoom move zoomend moveend', this._update, this);
+    },
+    _update() {
+        const scale = getSeaScale();
+        const z = this._map.getZoom();
+        this._els.forEach(({ el, sea }) => {
+            el.style.display = (z < sea.minZoom) ? 'none' : 'block';
+            const pt = this._map.latLngToLayerPoint([sea.lat, sea.lng]);
+            el.style.left = pt.x + 'px';
+            el.style.top  = pt.y + 'px';
+            el.querySelector('.sea-name').style.fontSize = (15 * scale) + 'px';
+            el.querySelector('.sea-en').style.fontSize   = (12 * scale) + 'px';
+        });
+    }
+});
+
+// ── 红头针 ────────────────────────────────────────────
+const markers = locations.map(loc => {
+    const size = getPinSize();
+    const icon = L.divIcon({
+        html: `<span style="font-size:${size}px;line-height:1;display:block;">📍</span>`,
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size * 0.44, size]
+    });
+    return L.marker([loc.lat, loc.lng], { icon }).addTo(map);
+});
+
+map.on('zoomend', () => {
+    const size = getPinSize();
+    markers.forEach(m => {
+        m.setIcon(L.divIcon({
+            html: `<span style="font-size:${size}px;line-height:1;display:block;">📍</span>`,
+            className: '',
+            iconSize: [size, size],
+            iconAnchor: [size * 0.44, size]
+        }));
+    });
+});
+
+// ── 路线折线 ──────────────────────────────────────────
+const routeCoords = locations.map(l => [l.lat, l.lng]);
+L.polyline(routeCoords, {
+    color: '#2193b0',
+    weight: 2.5,
+    opacity: 0.7,
+    dashArray: '8, 6'
+}).addTo(map);
+
+// ── 添加图层 ──────────────────────────────────────────
+new CityLabelLayer().addTo(map);
+new SeaLabelLayer().addTo(map);
+</script>
+</body>
+</html>
