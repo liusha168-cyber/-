@@ -75,19 +75,20 @@
             text-align: center;
             transform: translate(-50%, -50%);
             white-space: nowrap;
+            line-height: 1.05;
         }
         .sea-name {
-            color: #1e7ba6;
+            color: #000000;
             font-weight: 700;
             font-size: 15px;
             display: block;
-            text-shadow: 0 1px 3px rgba(255,255,255,0.8), 0 -1px 3px rgba(255,255,255,0.8);
+            text-shadow: 0 1px 3px rgba(255,255,255,0.9), 0 -1px 3px rgba(255,255,255,0.9);
         }
         .sea-en {
-            color: #5a9ab8;
-            font-size: 12px;
+            color: #000000;
+            font-size: 18px;
             display: block;
-            text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+            text-shadow: 0 1px 3px rgba(255,255,255,0.9);
         }
 
         /* ── ITINERARY ── */
@@ -421,7 +422,7 @@ const SeaLabelLayer = L.Layer.extend({
             el.style.left = pt.x + 'px';
             el.style.top  = pt.y + 'px';
             el.querySelector('.sea-name').style.fontSize = (15 * scale) + 'px';
-            el.querySelector('.sea-en').style.fontSize   = (12 * scale) + 'px';
+            el.querySelector('.sea-en').style.fontSize   = (18 * scale) + 'px';
         });
     }
 });
